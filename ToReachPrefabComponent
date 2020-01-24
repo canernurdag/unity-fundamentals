@@ -1,0 +1,6 @@
+To reach components of prefab that will be created later, there are two useful ways, except for singleton, static and injection.
+1st way is using "GameObject.Find, Object.FindObjectOfType, Object.FindObjectWithTags" etc. This is an easy way to implement but not very efficient regarding performance issues.
+2nd way is creating details when Instantiate command occurs; 
+    [Serializefield] => GameObject which you would like to use it's  components in the prefab's scripts.
+    In Start or Awake => AddComponent, GetComponent, and equals the GameObjects, one is from Serializefield, one is from prefab's script.
+    Then reach functions, parametres etc.
