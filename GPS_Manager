@@ -1,0 +1,147 @@
+using GooglePlayGames;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.SocialPlatforms;
+using UnityEngine.UI;
+
+public class GPS_Manager : MonoBehaviour
+{
+    public static GPS_Manager Instance;
+
+    public Text _UserState;
+
+    public string _leaderBoardID;
+    public int _submitScoreForLeaderBoard;
+    public int _userScoreInLeaderBoard;
+   
+
+    private void Awake()
+    {
+        Singleton();
+    }
+
+    private void Singleton()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
+
+    private void Start()
+    {
+        if(Application.platform == RuntimePlatform.Android)
+        {
+            _leaderBoardID = "TO FILL";
+            
+            PlayGamesPlatform.DebugLogEnabled = true;           // => // Recommended for debugging
+            PlayGamesPlatform.Activate();                       // => Activate the Google Play Games platform
+
+        }
+
+        else if (Application.platform ==RuntimePlatform.IPhonePlayer)
+        {
+            _leaderBoardID = "";
+        }
+
+        SignInSilently();
+        LoadScoreFromGPSLeaderBoard();
+    }
+
+    public void SignInSilently()
+    {
+        if (Social.localUser.authenticated == false)
+        {
+            Social.localUser.Authenticate( 
+                (bool success) =>
+                {
+                    if(success == true)
+                    {
+                        Debug.Log("Sign-in Successfully");
+                    }
+                    else if (success == false)
+                    {
+                        Debug.Log("Sign-in Failed");
+                    }
+
+                }
+                
+                );
+        }
+        else
+        {
+            Debug.Log("LocalUser is already signed-in.");
+        }
+    }
+
+    public void Update()
+    {
+        if(_UserState != null)
+        { 
+        _UserState.text = Social.localUser.state.ToString();
+        }
+        else
+        {
+            return;
+        }
+    }
+
+
+    public void LeaderBoardShow()
+    {
+        if (Social.localUser.authenticated == true)
+        {
+            // Social.ShowLeaderboardUI ();                                 // => To Show all leaderboard
+            PlayGamesPlatform.Instance.ShowLeaderboardUI(_leaderBoardID);   //=> To Show Spesific LeaderBoard
+
+        }
+
+    }
+
+    public void LeaderBoardSubmitScore()
+    {
+        if (Social.localUser.authenticated == true)
+        {
+            Social.ReportScore(_submitScoreForLeaderBoard,_leaderBoardID, 
+                (bool success) => 
+                {
+                    if(success)
+                    {
+                        Debug.Log("Score is submitted to Leaderboard Succesfully");
+                    }
+                    else
+                    {
+                        Debug.Log("Fail to submit score to Leaderboard");
+                    }
+                }
+                );
+        }
+    }
+
+    public int LoadScoreFromGPSLeaderBoard()
+    {
+        var _leaderBoardTemp = Social.CreateLeaderboard();
+        _leaderBoardTemp.id = _leaderBoardID;
+        _leaderBoardTemp.LoadScores(
+            (result) =>
+            {
+                if (_leaderBoardTemp.localUserScore != null)
+                {
+                    _userScoreInLeaderBoard = Convert.ToInt32(_leaderBoardTemp.localUserScore.value);
+                }
+                else if (_leaderBoardTemp.localUserScore == null)
+                {
+                    _userScoreInLeaderBoard = 0;
+                }
+            });
+
+        return _userScoreInLeaderBoard;
+    }
+}
