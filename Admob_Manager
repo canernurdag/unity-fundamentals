@@ -1,0 +1,246 @@
+
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using GoogleMobileAds.Api;
+using System;
+using UnityEngine.UI;
+
+
+
+ //Admob SDK
+
+public class Admob_Manager : MonoBehaviour
+{
+    public static Admob_Manager Instance;
+
+    public Text _adStatuText;
+
+    public string _AdmobAppID = "TO FILL";
+
+    [Header("Variables")]
+    private BannerView _myBannerAd;
+    private InterstitialAd _myInterAd;
+    private RewardedAd _MyRewardAd;
+
+
+    [Header("Test Ads")]
+    public string _testBannerAdId = "ca-app-pub-3940256099942544/6300978111";
+    public string _testInterAdId = "ca-app-pub-3940256099942544/1033173712";
+    public string _testRewardedAdId = "ca-app-pub-3940256099942544/5224354917";
+
+    [Header("The App Ads")]
+    public string _bannerAdId = "TO FILL";
+    public string _interAdId = "TO FILL";
+    public string _rewardedAdId = "TO FILL";
+
+    private void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+
+        MobileAds.SetiOSAppPauseOnBackground(true);
+
+        MobileAds.Initialize(_AdmobAppID);
+    }
+
+    public void Start()
+    {
+       _myBannerAd = new BannerView(_testBannerAdId,AdSize.Banner,AdPosition.Bottom);
+        _myInterAd = new InterstitialAd(_testInterAdId);
+       _MyRewardAd = new RewardedAd(_testRewardedAdId);
+
+        RequestBanner();
+        RequestInter();
+        RequestRewarded();
+
+        ShowBannerAd();
+
+    }
+
+    public void RequestBanner()
+    {
+        // CLEAN up banner ad before creating a new one.
+        if (_myBannerAd != null)
+        {
+            _myBannerAd.Destroy();
+        }
+
+        //CREATE a 320x50 banner on the screen
+
+        _myBannerAd = new BannerView(_testBannerAdId,AdSize.Banner,AdPosition.Bottom);
+
+
+        // SUBSCRIBE ON EVENTS
+        _myBannerAd.OnAdLoaded += HandleAdLoaded; // Called when an ad request has successfully loaded.
+        _myBannerAd.OnAdFailedToLoad += HandleAdFailedToLoad;  // Called when an ad request failed to load.
+        _myBannerAd.OnAdOpening += HandleAdOpened; // Called when an ad is clicked.
+        _myBannerAd.OnAdClosed += HandleAdClosed; // Called when the user returned from the app after an ad click.     
+        _myBannerAd.OnAdLeavingApplication += HandleAdLeftApplication; // Called when the ad click caused the user to leave the application.
+
+        // LOAD THE BANNER AD
+        AdRequest request = new AdRequest.Builder().Build();
+        _myBannerAd.LoadAd(request);
+    }
+    public void RequestInter()
+    {
+        //CLEAN up 
+        if (_myInterAd != null)
+        {
+            _myInterAd.Destroy();
+        }
+
+        //CREATE AN INTER AD
+        _myInterAd = new InterstitialAd(Instance._testInterAdId);
+
+        // SUBSCRIBE ON EVENTS
+        _myInterAd.OnAdLoaded += HandleInterstitialLoaded;// Called when an ad request has successfully loaded.
+        _myInterAd.OnAdFailedToLoad += HandleInterstitialFailedToLoad;  // Called when an ad request failed to load.
+        _myInterAd.OnAdOpening += HandleInterstitialOpened; // Called when an ad is shown.
+        _myInterAd.OnAdClosed += HandleInterstitialClosed; // Called when the ad is closed.
+        _myInterAd.OnAdLeavingApplication += HandleInterstitialLeftApplication; // Called when the ad click caused the user to leave the application.
+
+        //LOAD THE INTER AD
+        AdRequest request = new AdRequest.Builder().Build();
+        _myInterAd.LoadAd(request);
+    }
+    public void RequestRewarded()
+    {
+        //CREATE A Rewarded AD
+        _MyRewardAd = new RewardedAd(_testRewardedAdId);
+
+        // SUBSCRIBE ON EVENTS
+        _MyRewardAd.OnAdLoaded += HandleRewardedAdLoaded;// Called when an ad request has successfully loaded.      
+        _MyRewardAd.OnAdFailedToLoad += HandleRewardedAdFailedToLoad;// Called when an ad request failed to load.  
+        _MyRewardAd.OnAdOpening += HandleRewardedAdOpening; // Called when an ad is shown.
+        _MyRewardAd.OnAdFailedToShow += HandleRewardedAdFailedToShow; // Called when an ad request failed to show.
+        _MyRewardAd.OnUserEarnedReward += HandleUserEarnedReward;// Called when the user should be rewarded for interacting with the ad.
+        _MyRewardAd.OnAdClosed += HandleRewardedAdClosed; // Called when the ad is closed.
+
+        //LOAD THE REWARD AD
+        AdRequest request = new AdRequest.Builder().Build();
+        _MyRewardAd.LoadAd(request);
+
+    }
+    public void ShowBannerAd()
+    {
+        _myBannerAd.Show();
+    }
+    public void ShowInterAd()
+    {
+        if (_myInterAd.IsLoaded())
+        {
+            _myInterAd.Show();
+        }
+        else
+        {
+            MonoBehaviour.print("Interstitial is not ready yet");
+        }
+    }
+    public void ShowRewardAd()
+    {
+        if(_MyRewardAd.IsLoaded())
+        {
+            _MyRewardAd.Show();
+        }
+        else
+        {
+            MonoBehaviour.print("Rewarded ad is not ready yet");
+        }
+    }
+
+    //FOR EVENTS AND DELEGATES
+     
+
+    public void HandleAdLoaded(object sender, EventArgs args)
+    {
+        _adStatuText.text = "Banner Ad Loaded Succesffully Caner";
+    }
+    public void HandleAdFailedToLoad(object sender, AdFailedToLoadEventArgs args)
+    {
+        _adStatuText.text = "Banner Ad Fail to Load Caner";
+    }
+    public void HandleAdOpened(object sender, EventArgs args)
+    {
+        _adStatuText.text = "Banner Ad Opened Caner";
+    }
+    public void HandleAdClosed(object sender, EventArgs args)
+    {
+        _adStatuText.text = "Banner Ad Closed Caner";
+    }
+    public void HandleAdLeftApplication(object sender, EventArgs args)
+    {
+        _adStatuText.text = "Banner Ad Application Closed Caner";
+    }
+
+
+
+    
+
+    public void HandleInterstitialLoaded(object sender, EventArgs args)
+    {
+        ._adStatuText.text = "Inter Ad Loaded Succesffully Caner";
+    }
+    public void HandleInterstitialFailedToLoad(object sender, AdFailedToLoadEventArgs args)
+    {
+        _adStatuText.text = "Inter Ad Fail to Load Caner";
+    }
+    public void HandleInterstitialOpened(object sender, EventArgs args)
+    {
+        _adStatuText.text = "Inter Ad Opened Caner";
+    }
+    public void HandleInterstitialClosed(object sender, EventArgs args)
+    {
+        _adStatuText.text = "Inter Ad Closed Caner";
+        RequestInter();
+    }
+    public void HandleInterstitialLeftApplication(object sender, EventArgs args)
+    {
+        _adStatuText.text = "Inter Ad Application Closed Caner";
+    }
+
+   
+
+   
+
+    public void HandleRewardedAdLoaded(object sender, EventArgs args)
+    {
+        _adStatuText.text = "Reward Ad Loaded Succesffully Caner";
+    }
+    public void HandleRewardedAdFailedToLoad(object sender, AdErrorEventArgs args)
+    {
+        _adStatuText.text = "Reward Ad Fail to Load Caner";
+    }
+    public void HandleRewardedAdOpening(object sender, EventArgs args)
+    {
+        _adStatuText.text = "Reward Ad Opened Caner";
+    }
+    public void HandleRewardedAdFailedToShow(object sender, AdErrorEventArgs args)
+    {
+        _adStatuText.text = "Reward Ad Failed to Show Caner";
+    }
+    public void HandleRewardedAdClosed(object sender, EventArgs args)
+    {
+        _adStatuText.text = "Reward Ad Closed Caner";
+    }
+    public void HandleUserEarnedReward(object sender, Reward args)
+    {
+        string type = args.Type;
+        double amount = args.Amount;
+        MonoBehaviour.print(
+            "HandleRewardedAdRewarded event received for "
+                        + amount.ToString() + " " + type);
+        //REWARD USER HERE
+        User_Manager._Instance._userDiamondLocal = User_Manager._Instance._userDiamondLocal + 20;
+        User_Manager._Instance.SaveUserLocal();
+    }
+   }
+   
+   
